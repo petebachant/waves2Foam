@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
         {
             #include "alphaControls.H"
 
-            if (pimple.firstIter() || alphaOuterCorrectors)
+            if (pimple.firstIter())
             {
                 twoPhaseProperties.correct();
 

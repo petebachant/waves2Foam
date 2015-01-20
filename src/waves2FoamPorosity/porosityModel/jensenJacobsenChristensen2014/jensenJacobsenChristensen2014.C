@@ -24,92 +24,105 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "emptyExternal.H"
+#include "jensenJacobsenChristensen2014.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace waveTheories
-{
+
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(emptyExternal, 0);
-
+defineTypeNameAndDebug(jensenJacobsenChristensen2014, 0);
 addToRunTimeSelectionTable
 (
-    externalWaveForcing,
-    emptyExternal,
-    externalWaveForcing
+    wavesPorosityModel,
+    jensenJacobsenChristensen2014,
+    wavesPorosityModel
 );
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 
-emptyExternal::emptyExternal
+jensenJacobsenChristensen2014::jensenJacobsenChristensen2014
 (
-    IOobject io,
-    const Time& rT,
     const fvMesh& mesh
 )
 :
-    externalWaveForcing(io, rT, mesh)
-{}
+    wavesPorosityModel(mesh),
+
+    pZones_(mesh)
+{
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void emptyExternal::step()
+tmp<fvMatrix<vector> > jensenJacobsenChristensen2014::ddt
+(
+    GeometricField<vector, fvPatchField, volMesh>& U
+)
 {
-    // Nothing to be done
+    return pZones_.ddt(U);
 }
 
 
-scalar emptyExternal::eta
+tmp<fvMatrix<vector> > jensenJacobsenChristensen2014::ddt
 (
-    const point& x,
-    const scalar& time
+    const geometricOneField& rho,
+    GeometricField<vector, fvPatchField, volMesh>& U
+)
+{
+    return pZones_.ddt(rho, U);
+}
+
+
+tmp<fvMatrix<vector> > jensenJacobsenChristensen2014::ddt
+(
+    const dimensionedScalar& rho,
+    GeometricField<vector, fvPatchField, volMesh>& U
+)
+{
+	return pZones_.ddt(rho, U);
+}
+
+
+tmp<fvMatrix<vector> > jensenJacobsenChristensen2014::ddt
+(
+    const volScalarField& rho,
+    GeometricField<vector, fvPatchField, volMesh>& U
+)
+{
+    return pZones_.ddt(rho, U);
+}
+
+
+tmp<volScalarField> jensenJacobsenChristensen2014::porosity() const
+{
+    return pZones_.porosity();
+}
+
+
+void jensenJacobsenChristensen2014::addResistance(fvVectorMatrix& UEqn) const
+{
+    pZones_.addResistance(UEqn);
+}
+
+
+void jensenJacobsenChristensen2014::addResistance
+(
+    const fvVectorMatrix& UEqn,
+    volTensorField& AU
 ) const
 {
-    return 0.0;
+    pZones_.addResistance(UEqn, AU);
 }
 
-
-scalar emptyExternal::ddxPd
-(
-    const point& x,
-    const scalar& time,
-    const vector& unitVector
-) const
-{
-    return 0.0;
-}
-
-
-scalar emptyExternal::p
-(
-    const point& x,
-    const scalar& time
-) const
-{
-    return 0.0;
-}
-
-
-vector emptyExternal::U
-(
-    const point& x,
-    const scalar& time
-) const
-{
-    return vector::zero;
-}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace waveTheories
 } // End namespace Foam
 
 // ************************************************************************* //

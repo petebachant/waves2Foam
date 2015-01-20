@@ -24,84 +24,85 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "externalWaveForcing.H"
+#include "wavesPorosityModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace waveTheories
-{
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(externalWaveForcing, 0);
-defineRunTimeSelectionTable(externalWaveForcing, externalWaveForcing);
+    defineTypeNameAndDebug(wavesPorosityModel, 0);
+    defineRunTimeSelectionTable(wavesPorosityModel, wavesPorosityModel);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 
-externalWaveForcing::externalWaveForcing
+Foam::wavesPorosityModel::wavesPorosityModel
 (
-    IOobject io,
-    const Time& rT,
-    const fvMesh& mesh
+	const fvMesh& mesh
 )
-:
-    regIOobject(io),
-
-    rT_(rT),
-
-    mesh_(mesh)
 {
-
 }
 
 
-externalWaveForcing::~externalWaveForcing()
+Foam::wavesPorosityModel::~wavesPorosityModel()
 {}
 
 
-autoPtr<externalWaveForcing> externalWaveForcing::New
+autoPtr<wavesPorosityModel> wavesPorosityModel::New
 (
-    IOobject io,
-    const Time& rT,
     const fvMesh& mesh
 )
 {
-    word externalType
-    (
-        (io.db().lookupObject<IOdictionary>("waveProperties"))
-        .lookupOrDefault<word>("externalForcing", "emptyExternal")
-    );
+    word wavesPorosityModelTypeName;
 
-    externalWaveForcingConstructorTable::iterator cstrIter =
-        externalWaveForcingConstructorTablePtr_->find(externalType);
+    // Enclose the creation of the dictionary to ensure it is deleted before
+    // the actual porosity model is created
+    {
+    	// Not successful with porosityZones, because the reading of the
+    	// porous zones properties was made impossible, if an additional
+    	// keyword was added.
+//        IOdictionary dict
+//        (
+//        	IOobject
+//        	(
+//        	    "porosityZones",
+//        	    mesh.time().constant(),
+//        	    mesh,
+//        	    IOobject::MUST_READ,
+//        	    IOobject::NO_WRITE
+//        	)
+//        );
+//
+//        dict.lookup("wavesPorosityModel") >> wavesPorosityModelTypeName;
 
-    if (cstrIter == externalWaveForcingConstructorTablePtr_->end())
+    	mesh.thisDb().lookupObject<IOdictionary>("waveProperties")
+    		.lookup("porosityModel") >> wavesPorosityModelTypeName;
+    }
+
+    wavesPorosityModelConstructorTable::iterator cstrIter =
+    		wavesPorosityModelConstructorTablePtr_->find(wavesPorosityModelTypeName);
+
+    if (cstrIter == wavesPorosityModelConstructorTablePtr_->end())
     {
         FatalErrorIn
         (
-            "externalWaveForcing::New(IOobject, const Time&)"
-        )   << "Unknown type of external wave forcing: " << externalType
+            "wavesPorosityModel::New(const fvMesh&)"
+        )   << "Unknown porosity model of type " << wavesPorosityModelTypeName
             << endl << endl
-            << "Valid external forcings are :" << endl
-            << externalWaveForcingConstructorTablePtr_->toc()
+            << "Valid porosity models are :" << endl
+            << wavesPorosityModelConstructorTablePtr_->toc()
             << exit(FatalError);
     }
 
-    return autoPtr<externalWaveForcing>(cstrIter()(io, rT, mesh));
+    return autoPtr<wavesPorosityModel>(cstrIter()(mesh));
 }
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace waveTheories
 } // End namespace Foam
 
 // ************************************************************************* //

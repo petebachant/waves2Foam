@@ -23,113 +23,121 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    Foam::waveTheories::emptyExternal
+    Foam::jensenJacobsenChristensen2014
 
 Description
 
 
 SourceFiles
-    emptyExternal.C
+    jensenJacobsenChristensen2014.C
 
 Author
-    Niels Gjøl Jacobsen, Deltares.  All rights reserved.
-    Bo Terp Paulsen, Deltares, All rights reserved.
+    Niels G. Jacobsen, Deltares.  All rights reserved.
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef emptyExternal_H
-#define emptyExternal_H
+#ifndef jensenJacobsenChristensen2014_H
+#define jensenJacobsenChristensen2014_H
 
-#include "externalWaveForcing.H"
+#include "wavesPorosityModel.H"
+#include "jjc2014Zones.H"
+//#include "porosityZones.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace waveTheories
-{
 
 /*---------------------------------------------------------------------------*\
-                           Class emptyExternal Declaration
+                         Class jensenJacobsenChristensen2014 Declaration
 \*---------------------------------------------------------------------------*/
 
-class emptyExternal
+class jensenJacobsenChristensen2014
 :
-    public externalWaveForcing
+    public wavesPorosityModel
 {
 
 protected:
 
     // Protected data
+//        porosityZones pZones_;
+        jjc2014Zones pZones_;
 
     // Protected member functions
+
 
 public:
 
     //- Runtime type information
-    TypeName("emptyExternal");
+    TypeName("jensenJacobsenChristensen2014");
 
     // Constructors
 
         //- from components
-        emptyExternal
+        jensenJacobsenChristensen2014
         (
-            IOobject,
-            const Time&,
-            const fvMesh&
+            const fvMesh& mesh
         );
 
 
     // Destructor
 
-        ~emptyExternal()
+        ~jensenJacobsenChristensen2014()
         {}
 
 
     // Member Functions
-        virtual void step();
 
-
-        virtual scalar eta
+        //- mirror fvm::ddt with porosity
+        virtual tmp<fvMatrix<vector> > ddt
         (
-            const point&,
-            const scalar&
+            GeometricField<vector, fvPatchField, volMesh>&
+        );
+
+        //- mirror fvm::ddt with porosity
+        virtual tmp<fvMatrix<vector> > ddt
+        (
+            const geometricOneField&,
+            GeometricField<vector, fvPatchField, volMesh>&
+        );
+
+        //- mirror fvm::ddt with porosity
+        virtual tmp<fvMatrix<vector> > ddt
+        (
+            const dimensionedScalar&,
+            GeometricField<vector, fvPatchField, volMesh>&
+        );
+
+        //- mirror fvm::ddt with porosity
+        virtual tmp<fvMatrix<vector> > ddt
+        (
+            const volScalarField&,
+            GeometricField<vector, fvPatchField, volMesh>&
+        );
+
+        //- Return a volScalarField with the porosities
+        virtual tmp<volScalarField> porosity() const;
+
+        //- Add the viscous and inertial resistance force contribution
+        //  to the momentum equation
+        virtual void addResistance(fvVectorMatrix& UEqn) const;
+
+        //- Add the viscous and inertial resistance force contribution
+        //  to the tensorial diagonal
+        virtual void addResistance
+        (
+            const fvVectorMatrix& UEqn,
+            volTensorField& AU
         ) const;
 
 
-        virtual scalar ddxPd
-        (
-            const point&,
-            const scalar&,
-            const vector&
-        ) const;
-
-
-        virtual vector U
-        (
-            const point&,
-            const scalar&
-        ) const;
-
-
-        virtual scalar p
-        (
-            const point&,
-            const scalar&
-        ) const;
-
-
-        virtual bool writeData(Foam::Ostream&) const
-        {
-            return true;
-        };
 
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace waveTheories
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

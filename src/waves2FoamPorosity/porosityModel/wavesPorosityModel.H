@@ -23,23 +23,22 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    Foam::waveTheories::externalWaveForcing
+    Foam::wavesPorosityModel
 
 Description
 
 
 SourceFiles
-    externalWaveForcing.C
+    wavesPorosityModel.C
 
 Author
-    Niels Gjøl Jacobsen, Deltares.  All rights reserved.
-    Bo Terp Paulsen, Deltares, All rights reserved.
+    Niels Gjøl Jacobsen, Technical University of Denmark.  All rights reserved.
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef externalWaveForcing_H
-#define externalWaveForcing_H
+#ifndef wavesPorosityModel_H
+#define wavesPorosityModel_H
 
 #include "fvMesh.H"
 #include "volFields.H"
@@ -49,30 +48,28 @@ Author
 #include "runTimeSelectionTables.H"
 
 #include "uniformDimensionedFields.H"
-#include "crossVersionCompatibility.H"
+
+#include "fvCFD.H"
+#include "volFieldsFwd.H"
+#include "fvMatrix.H"
+#include "geometricOneField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace waveTheories
-{
 
 /*---------------------------------------------------------------------------*\
-                         Class externalWaveForcing Declaration
+                         Class wavesPorosityModel Declaration
 \*---------------------------------------------------------------------------*/
 
-class externalWaveForcing
-:
-    public regIOobject
+class wavesPorosityModel
 {
 
 protected:
 
     // Protected data
-        const Time& rT_;
 
-        const fvMesh& mesh_;
 
     // Protected member functions
 
@@ -82,96 +79,101 @@ private:
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
-        externalWaveForcing(const externalWaveForcing&);
+        wavesPorosityModel(const wavesPorosityModel&);
 
         //- Disallow default bitwise assignment
-        void operator=(const externalWaveForcing&);
+        void operator=(const wavesPorosityModel&);
 
 public:
 
     //- Runtime type information
-    TypeName("externalWaveForcing");
+    TypeName("wavesPorosityModel");
 
     // Declare run-time constructor selection table
 
         declareRunTimeSelectionTable
         (
             autoPtr,
-            externalWaveForcing,
-            externalWaveForcing,
+            wavesPorosityModel,
+            wavesPorosityModel,
             (
-                IOobject io,
-                const Time& rT,
                 const fvMesh& mesh
             ),
-            (io, rT, mesh)
+            (mesh)
         );
 
     // Constructors
 
         //- Construct from components
-        externalWaveForcing
+        wavesPorosityModel
         (
-            IOobject io,
-            const Time& rT,
-            const fvMesh& mesh
+            const fvMesh&
         );
-
 
     // Selectors
 
         //- Return a reference to the selected turbulence model
-        static autoPtr<externalWaveForcing> New
+        static autoPtr<wavesPorosityModel> New
         (
-            IOobject io,
-            const Time& rT,
-            const fvMesh& mesh
+            const fvMesh&
         );
 
     // Destructor
 
-        virtual ~externalWaveForcing();
+        virtual ~wavesPorosityModel();
 
     // Member Functions
-        virtual void step() = 0;
+        //- The templated part had to be skipped, because it should also be a
+        //  virtual function. I could not get this part working.
+        //  NGJ, 29.10.2014
 
-
-        virtual scalar eta
+        //- mirror fvm::ddt with porosity
+        virtual tmp<fvMatrix<vector> > ddt
         (
-            const point&,
-            const scalar&
+            GeometricField<vector, fvPatchField, volMesh>&
+        ) = 0;
+
+        //- mirror fvm::ddt with porosity
+        virtual tmp<fvMatrix<vector> > ddt
+        (
+            const geometricOneField&,
+            GeometricField<vector, fvPatchField, volMesh>&
+        ) = 0;
+
+        //- mirror fvm::ddt with porosity
+        virtual tmp<fvMatrix<vector> > ddt
+        (
+            const dimensionedScalar&,
+            GeometricField<vector, fvPatchField, volMesh>&
+        ) = 0;
+
+        //- mirror fvm::ddt with porosity
+        virtual tmp<fvMatrix<vector> > ddt
+        (
+            const volScalarField&,
+            GeometricField<vector, fvPatchField, volMesh>&
+        ) = 0;
+
+        //- Return a volScalarField with the porosities
+        virtual tmp<volScalarField> porosity() const = 0;
+
+        //- Add the viscous and inertial resistance force contribution
+        //  to the momentum equation
+        virtual void addResistance(fvVectorMatrix& UEqn) const = 0;
+
+        //- Add the viscous and inertial resistance force contribution
+        //  to the tensorial diagonal
+        virtual void addResistance
+        (
+            const fvVectorMatrix& UEqn,
+            volTensorField& AU
         ) const = 0;
 
-
-        virtual scalar ddxPd
-        (
-            const point&,
-            const scalar&,
-            const vector&
-        ) const = 0;
-
-
-        virtual vector U
-        (
-            const point&,
-            const scalar&
-        ) const = 0;
-
-
-        virtual scalar p
-        (
-            const point&,
-            const scalar&
-        ) const = 0;
-
-
-        virtual bool writeData(Foam::Ostream&) const = 0;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace waveTheories
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

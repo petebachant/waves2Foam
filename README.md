@@ -8,7 +8,9 @@ waves2Foam is a toolbox used to generate and absorb free surface water waves.
    Examples (from http://lavandula.imim.es/adun-new/?page_id=186)
 
    Ubuntu: `sudo apt-get install libgsl0-dev`
+
    Fedora: `sudo yum install gsl-devel`
+
    Suse:   `sudo zypper install gsl-devel`
 
 2. Execute `./Allwmake` from a terminal.
